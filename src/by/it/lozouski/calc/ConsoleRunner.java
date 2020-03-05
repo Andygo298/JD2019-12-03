@@ -3,6 +3,7 @@ package by.it.lozouski.calc;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.util.Locale;
 import java.util.Scanner;
 
@@ -12,9 +13,11 @@ class ConsoleRunner {
 
 
     public static void main(String[] args) {
+        LocalDateTime localDateTimeStart = LocalDateTime.now();
         Scanner sc1 = new Scanner(System.in);
         Parser parser = new Parser();
         Printer printer = new Printer();
+        ReportCreator reportCreator = new ReportCreator();
         System.out.println(langService.get(Messages.MES_CALC_START));
         Logging.logFileRecord(langService.get(Log.LOG_PROG_START));
         logSingleton.logFileRecord(langService.get(Log.LOG_PROG_START));//jd02-06
@@ -52,18 +55,26 @@ class ConsoleRunner {
                 default:
                     try {
                         Logging.logFileRecord(inputLine);
+                        LogOperation.logFileRecord(inputLine);
                         logSingleton.logFileRecord(inputLine);//jd02-06
                         Var result = parser.calculate(inputLine);
                         printer.print(result);
                         Logging.logFileRecord(langService.get(Log.LOG_RESULT) + result.toString());
+                        LogOperation.logFileRecord(langService.get(Log.LOG_RESULT) + result.toString());
                         logSingleton.logFileRecord(langService.get(Log.LOG_RESULT) + result.toString());//jd02-06
                     } catch (CalcException e) {
                         Logging.logFileRecord(e.getMessage());
+                        LogError.logFileRecord(e.getMessage());
                         logSingleton.logFileRecord(e.getMessage());//jd02-06
                         System.out.println(e.getMessage());
                     }
                     break;
             }
         }
+        System.out.println("Please input format of report, long or short");
+        LocalDateTime localDateTimeFinish = LocalDateTime.now();
+        reportCreator.chooseReportType(sc1.nextLine());
+        reportCreator.createReport(localDateTimeStart,localDateTimeFinish,
+                                   LogOperation.getLogFileTxtPath(),LogError.getLogFileTxtPath());
     }
 }
